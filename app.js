@@ -1,87 +1,69 @@
+//app.js
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const z_mongodb = require('./z_mongodb.js');
+const User = require('./models/user'); 
+const booksRoutes = require('./routes/books');
+const userRoutes = require('./routes/user');
+const auth = require('./middleware/auth');
+const path = require('path');
 app.use(express.json());
 
-mongoose.connect(z_mongodb.mongodbURI,{})
+mongoose.connect(z_mongodb.mongodbURI, {})
   .then(() => console.log('Connexion à MongoDB réussie !'))
   .catch(() => console.log('Connexion à MongoDB échouée !'));
 
-
-//Middleware ajoutant les header pour éviter l'erreur CORS (Cross Origin Resource Sharing) 
+// Middleware ajoutant les headers pour éviter l'erreur CORS (Cross Origin Resource Sharing) 
 app.use((req, res, next) => {
-	//accéder à notre API depuis n'importe quelle origine
   res.setHeader('Access-Control-Allow-Origin', '*');
-    //ajoute les headers mentionnés aux requêtes envoyées vers notre API
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
-    //envoyer des requêtes avec les méthodes mentionnées
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
 });
+app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use('/api/books', booksRoutes);
+app.use('/api/auth', userRoutes);
 
-//Middleware POST books
-app.post('/api/books', (req, res, next) => {
-  console.log(req.body);
-  res.status(201).json({
-    message: 'Objet créé !'
+// Middleware POST auth signup
+app.post('/api/auth/signup', (req, res, next) => {
+  delete req.body._id;
+  const user = new User({
+    ...req.body
   });
+  user.save()
+    .then(() => res.status(202).json({ message: 'Inscription effectuée !' }))
+    .catch(error => res.status(400).json({ error }));
 });
 
-app.get('/api/users', (req, res, next) => {
-  const users = [
-    {
-	  email: 'sophie.bluel@test.tld',
-	  password: 'S0phie',
-	  userId: 'a1b2c3d4e5f6789012345678',
-	  token: '',
-	},
-	{
-	  email: 'nomail@yopmail.com',
-	  password: 'C7ejsUidAGD6NCct',
-	  userId: '60d5f9e8c9a1b2001a2e4f3c',
-	  token: '',
-	}
-  ];
-  res.status(300).json(users);
+// Middleware POST auth login
+app.post('/api/auth/login', (req, res, next) => {
+  delete req.body._id;
+  const user = new User({
+    ...req.body
+  });
+  user.save()
+    .then(() => res.status(203).json({ message: 'Connexion réussie !' }))
+    .catch(error => res.status(400).json({ error }));
 });
 
+// Middleware POST id rating
+app.post('/api/books/:id/rating', (req, res, next) => {
+  delete req.body._id;
+  const rate = new Rate({
+    ...req.body
+  });
+  rate.save()
+    .then(() => res.status(201).json({ message: 'Vote enregistré !' }))
+    .catch(error => res.status(400).json({ error }));
+});
 
-//Middleware GET books
-app.get('/api/books', (req, res, next) => {
-  const books = [
-    {
-	  userId: 'a1b2c3d4e5f6789012345678',
-      title: 'L`hisoire sans fin',
-	  author: 'Michael Ende',
-      imageUrl: 'https://f.media-amazon.com/images/I/71FXt0UoAlL._SY466_.jpg',
-	  year: '2014',
-	  genre: 'Jeunesse',
-	  ratings : [
-		{
-		userId : '5f47ac10b58c1e001c8d4b6a',
-		grade : '5',
-		}
-	  ],
-	  averageRating : '5',
-    },
-    {
-      userId: '60d5f9e8c9a1b2001a2e4f3c',
-      title: 'Second Oekumene, tome 4: Vatican',
-	  author: 'John Crossford',
-	  imageUrl: 'https://f.media-amazon.com/images/I/71RaAJ27WIL._SY466_.jpg',
-	  year: '2023',
-	  genre: 'Science-fiction',
-	  ratings : [
-		{
-		userId : 'b2c3d4e5f678901234567890',
-		grade : '4.8',
-		}
-	  ],
-	  averageRating : '4.5',
-    },
-  ];
-  res.status(200).json(books);
+// Middleware GET books bestrating
+app.get('/api/books/bestrating', (req, res, next) => {
+  Bestrate.find()
+    .then(bestrating => res.status(200).json(bestrating))
+    .catch(error => res.status(400).json({ error }));
 });
 
 module.exports = app;
+
