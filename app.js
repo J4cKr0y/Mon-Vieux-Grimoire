@@ -2,7 +2,7 @@
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
-const z_mongodb = require('./z_mongodb.js');
+const dotEnv=require('dotenv').config()
 const User = require('./models/user'); 
 const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
@@ -13,9 +13,10 @@ const imagesDir = path.join(__dirname, 'images');
 const swaggerSetup = require('./swagger');
 app.use(express.json());
 
-mongoose.connect(z_mongodb.mongodbURI, {})
-  .then(() => console.log('Connexion à MongoDB réussie !'))
-  .catch(() => console.log('Connexion à MongoDB échouée !'));
+const mongodbURI = `mongodb+srv://${process.env.DATABASE_NAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}`;
+mongoose.connect(mongodbURI, {})
+  .then(() => console.log('Connected to Database. Welcome.'))
+  .catch(() => console.log('Failed to connect to Database !'));
 
 // Middleware ajoutant les headers pour éviter l'erreur CORS (Cross Origin Resource Sharing) 
 app.use((req, res, next) => {
