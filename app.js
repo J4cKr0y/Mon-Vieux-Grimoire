@@ -8,6 +8,9 @@ const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const auth = require('./middleware/auth');
 const path = require('path');
+const checkWritePermission = require('./middleware/checkWritePermission');
+const imagesDir = path.join(__dirname, 'images');
+const swaggerSetup = require('./swagger');
 app.use(express.json());
 
 mongoose.connect(z_mongodb.mongodbURI, {})
@@ -21,8 +24,10 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   next();
 });
+
 app.use('/images', express.static(path.join(__dirname, 'images')));
 app.use('/api/books', booksRoutes);
+app.use('/api/books', checkWritePermission(imagesDir));
 app.use('/api/auth', userRoutes);
 
 // Middleware POST auth signup
@@ -67,3 +72,4 @@ app.get('/api/books/bestrating', (req, res, next) => {
 
 module.exports = app;
 
+swaggerSetup(app);
