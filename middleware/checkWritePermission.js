@@ -4,21 +4,22 @@ const path = require('path');
 
 const checkWritePermission = (directory) => {
     return (req, res, next) => {
+		console.log(`checkWritePermission in ${directory}`);
         const testFile = path.join(directory, `test-write-permission-${Date.now()}.txt`);
         
-        fs.writeFile(testFile, 'Test d\'écriture', (writeErr) => {
+        fs.writeFile(testFile, 'Writing test', (writeErr) => {
             if (writeErr) {
-                console.error(`Erreur d'écriture dans ${directory}:`, writeErr);
-                return res.status(500).json({ error: 'Erreur serveur : problème de permissions d\'écriture' });
+                console.error(`Writing error in ${directory}:`, writeErr);
+                return res.status(500).json({ error: 'Server Error: Write permissions problem' });
             }
             
             fs.unlink(testFile, (unlinkErr) => {
                 if (unlinkErr) {
-                    console.error(`Erreur lors de la suppression du fichier test dans ${directory}:`, unlinkErr);
+                    console.error(`Error deleting test file in ${directory}:`, unlinkErr);
                     
                 }
                 
-                console.log(`Vérification des droits d'écriture réussie dans ${directory}`);
+                console.log(`Write permissions check successful in ${directory}`);
                 next(); 
             });
         });

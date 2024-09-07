@@ -3,54 +3,56 @@ const Book = require('../models/book');
 const fs = require('fs').promises;
 const sharp = require('sharp');
 const path = require('path');
+const { performance, PerformanceObserver } = require('perf_hooks');
 
 // POST - CREATE
 exports.createBook = (req, res) => {
-    console.log('Contenu de req.file:', JSON.stringify(req.file, null, 2));
-    let bookData;
-    try {
-        bookData = JSON.parse(req.body.book);
-    } catch (error) {
-        console.error('Erreur lors du parsing du JSON :', error);
-        return res.status(400).json({ error: 'Invalid JSON' });
-    }
-    if (!bookData.title || !bookData.author || !bookData.year || !bookData.genre || !bookData.ratings) {
-        console.error('Données manquantes :', { bookData });
-        return res.status(400).json({ error: 'Missing required fields' });
-    }
-    if (!req.file) {
-        console.error('Aucun fichier n\'a été uploadé');
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
-    const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
-    const sharpenedFile = `images/${filename}`;
-    sharp(req.file.buffer)
-        .resize(300)
-        .toFormat('webp')
-        .toFile(sharpenedFile)
-        .then(info => {
-            console.log('Image traitée avec succès :', info);
-            const book = new Book({
-                userId: req.auth.userId,
-                title: bookData.title,
-                author: bookData.author,
-                imageUrl: `${req.protocol}://${req.get('host')}/${sharpenedFile}`,
-                year: parseInt(bookData.year, 10),
-                genre: bookData.genre,
-                ratings: bookData.ratings,
-                averageRating: bookData.averageRating 
-            });
-            return book.save();
-        })
-        .then(() => {
-            console.log('Livre enregistré avec succès');
-            res.status(201).json({ message: 'Livre enregistré !' });
-        })
-        .catch(error => {
-            console.error('Erreur lors du traitement ou de l\'enregistrement :', error);
-            res.status(500).json({ error: error.message });
-        });
+  console.log('Contenu de req.file:', JSON.stringify(req.file, null, 2));
+  let bookData;
+  try {
+    bookData = JSON.parse(req.body.book);
+  } catch (error) {
+    console.error('Erreur lors du parsing du JSON :', error);
+    return res.status(400).json({ error: 'Invalid JSON' });
+  }
+  if (!bookData.title || !bookData.author || !bookData.year || !bookData.genre || !bookData.ratings) {
+    console.error('Données manquantes :', { bookData });
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+  if (!req.file) {
+    console.error('Aucun fichier n\'a été uploadé');
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
+  const sharpenedFile = `images/${filename}`;
+  sharp(req.file.buffer)
+    .resize(300)
+    .toFormat('webp')
+    .toFile(sharpenedFile)
+    .then(info => {
+      console.log('Image traitée avec succès :', info);
+      const book = new Book({
+        userId: req.auth.userId,
+        title: bookData.title,
+        author: bookData.author,
+        imageUrl: `${req.protocol}://${req.get('host')}/${sharpenedFile}`,
+        year: parseInt(bookData.year, 10),
+        genre: bookData.genre,
+        ratings: bookData.ratings,
+        averageRating: bookData.averageRating 
+      });
+      return book.save();
+    })
+    .then(() => {
+      console.log('Livre enregistré avec succès');
+      res.status(201).json({ message: 'Livre enregistré !' });
+    })
+    .catch(error => {
+      console.error('Erreur lors du traitement ou de l\'enregistrement :', error);
+      res.status(500).json({ error: error.message });
+    });
 };
+
 
 // GET ID - READ
 exports.getOneBook = (req, res) => {
@@ -75,8 +77,17 @@ exports.modifyBook = async (req, res) => {
     if (existingBook.userId != req.auth.userId) {
       return res.status(403).json({ error: "Unauthorized request" });
     }
+
     let updatedImageUrl = existingBook.imageUrl;
     if (req.file) {
+		
+    let fileSize = req.file.size / 1024 / 1024;
+    if (fileSize > 4) {
+      alert("Please choose a file less than 4MB.");
+      return;
+    }
+		
+		
       const filename = `${Date.now()}-${Math.round(Math.random() * 1E9)}.webp`;
       const sharpenedFile = `images/${filename}`;
       await sharp(req.file.buffer)
@@ -91,6 +102,7 @@ exports.modifyBook = async (req, res) => {
         console.error("Error deleting old image:", err);
       }
     }
+
     const updatedBook = {
       userId: req.auth.userId,
       title: bookData.title || existingBook.title,
@@ -101,33 +113,44 @@ exports.modifyBook = async (req, res) => {
       ratings: existingBook.ratings,
       averageRating: existingBook.averageRating
     };
+
     await Book.updateOne({ _id: req.params.id }, updatedBook);
-    res.status(200).json({ message: 'Livre modifié !' });
+    res.status(200).json({ message: 'Book updated !' });
   } catch (error) {
-    console.error('Erreur lors de la modification du livre:', error);
+    console.error('Error updating book:', error);
     res.status(500).json({ error: error.message });
   }
 };
 
 // DELETE
 exports.deleteBook = (req, res) => {
-
-   Book.findOne({ _id: req.params.id})
-       .then(book => {
-           if (book.userId != req.auth.userId) {
-               res.status(401).json({message: 'Not authorized'});
-           } else {
-               const filename = thing.imageUrl.split('/images/')[1];
-               fs.unlink(`images/${filename}`, () => {
-					Book.deleteOne({ _id: req.params.id })
-						.then(() => res.status(200).json({ message: 'Objet supprimé !' }))
-						.catch(error => res.status(401).json({ error }));
-               });
-           }
-       })
-       .catch( error => {
-           res.status(500).json({ error });
-       });
+    const start = performance.now();
+    Book.findOne({ _id: req.params.id })
+        .then(book => {
+            if (!book) {
+                const duration = performance.now() - start;
+                console.log(`deleteBook (book not found) took ${duration}ms`);
+                return res.status(404).json({ error: 'Book not found' });
+            }
+            if (book.userId != req.auth.userId) {
+                const duration = performance.now() - start;
+                console.log(`deleteBook (unauthorized) took ${duration}ms`);
+                return res.status(401).json({ message: 'Not authorized' });
+            }
+            const filename = book.imageUrl.split('/images/')[1];
+            return fs.unlink(`images/${filename}`)
+                .then(() => Book.deleteOne({ _id: req.params.id }))
+                .then(() => {
+                    const duration = performance.now() - start;
+                    console.log(`deleteBook (success) took ${duration}ms`);
+                    res.status(200).json({ message: 'Book deleted!' });
+                });
+        })
+        .catch(error => {
+            const duration = performance.now() - start;
+            console.log(`deleteBook (error) took ${duration}ms`);
+            res.status(500).json({ error: error.message });
+        });
 };
 
 // GET BEST RATED BOOKS
@@ -146,12 +169,12 @@ exports.addRating = (req, res) => {
     
 
     if (!userId || rating === undefined) {
-        return res.status(400).json({ error: "UserId et rating sont requis." });
+        return res.status(400).json({ error: "UserId and rating are required." });
     }
 
     const grade = parseInt(rating, 10);
     if (isNaN(grade) || grade < 0 || grade > 5) {
-        return res.status(400).json({ error: "La note doit être un nombre entre 0 et 5." });
+        return res.status(400).json({ error: "The grade must be a number between 0 and 5." });
     }
 
     Book.findOne({ _id: bookId })

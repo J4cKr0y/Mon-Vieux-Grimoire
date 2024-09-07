@@ -10,8 +10,11 @@ const auth = require('./middleware/auth');
 const path = require('path');
 const checkWritePermission = require('./middleware/checkWritePermission');
 const imagesDir = path.join(__dirname, 'images');
+const mongoSanitize = require('express-mongo-sanitize');
 const swaggerSetup = require('./swagger');
 app.use(express.json());
+app.use(mongoSanitize());
+
 
 const mongodbURI = `mongodb+srv://${process.env.DATABASE_NAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}`;
 mongoose.connect(mongodbURI, {})
@@ -38,7 +41,7 @@ app.post('/api/auth/signup', (req, res, next) => {
     ...req.body
   });
   user.save()
-    .then(() => res.status(202).json({ message: 'Inscription effectuée !' }))
+    .then(() => res.status(202).json({ message: 'Registration completed!' }))
     .catch(error => res.status(400).json({ error }));
 });
 
@@ -49,7 +52,7 @@ app.post('/api/auth/login', (req, res, next) => {
     ...req.body
   });
   user.save()
-    .then(() => res.status(203).json({ message: 'Connexion réussie !' }))
+    .then(() => res.status(203).json({ message: 'Connection successful!' }))
     .catch(error => res.status(400).json({ error }));
 });
 
@@ -60,7 +63,7 @@ app.post('/api/books/:id/rating', (req, res, next) => {
     ...req.body
   });
   rate.save()
-    .then(() => res.status(201).json({ message: 'Vote enregistré !' }))
+    .then(() => res.status(201).json({ message: 'Vote recorded!' }))
     .catch(error => res.status(400).json({ error }));
 });
 
