@@ -1,10 +1,12 @@
 //middleware/auth
 const jwt = require('jsonwebtoken');
+const dotEnv=require("dotenv").config();
  
 module.exports = (req, res, next) => {
    try {
        const token = req.headers.authorization.split(' ')[1];
-       const decodedToken = jwt.verify(token, 'RANDOM_TOKEN_SECRET');
+	   const JWT_SECRET = process.env.JWT_SECRET;
+       const decodedToken = jwt.verify(token, JWT_SECRET);
        const userId = decodedToken.userId;
        req.auth = {
            userId: userId

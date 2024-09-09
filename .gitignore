@@ -28,3 +28,4 @@ yarn-error.log*
 zGit.txt
 z_mongodb.js
 *.old
+.vscode
