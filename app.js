@@ -16,6 +16,7 @@ app.use(express.json());
 app.use(mongoSanitize());
 app.disable('x-powered-by');
 
+
 const mongodbURI = `mongodb+srv://${process.env.DATABASE_NAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}`;
 mongoose.connect(mongodbURI, {})
   .then(() => console.log('Connected to Database. Welcome.'))
