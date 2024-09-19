@@ -1,6 +1,5 @@
 //middleware/auth
 const jwt = require('jsonwebtoken');
-const dotEnv=require("dotenv").config();
  
 module.exports = (req, res, next) => {
    try {

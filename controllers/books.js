@@ -8,13 +8,14 @@ const processImageMid = require('../middleware/processImageMid');
 const { validateBookData } = require('../middleware/validateBookData');
 const escape = require('escape-html');
 
-/*const normalizePath = (filePath) => {
-  return path.normalize(filePath).replace(/\\/g, '/');
-};*/
-
 // POST - CREATE
 exports.createBook = (req, res) => {
   const bookObject = JSON.parse(req.body.book);
+    Book.findOne({ title : bookObject.title })
+    .then(oldBook => {
+      if (oldBook) {
+        return res.status(400).json({ error: 'Book already exist' });
+	}})
   delete bookObject._id;
   delete bookObject._userId;
   const book = new Book({
@@ -30,23 +31,6 @@ exports.createBook = (req, res) => {
     .then(() => { res.status(201).json({message: 'Book saved !'})})
     .catch(error => { res.status(400).json( { error })});
 };
-/*exports.createBook = (req, res) => {
-  const book = new Book({
-    userId: req.auth.userId,
-    title: escape(req.bookData.title),
-    author: escape(req.bookData.author),
-    imageUrl: req.imageUrl,
-    year: parseInt(req.bookData.year, 10),
-    genre: escape(req.bookData.genre),
-    ratings: req.bookData.ratings,
-    averageRating: req.bookData.averageRating 
-  });
-
-  book.save()
-    .then(() => res.status(201).json({ message: 'Book saved !' }))
-    .catch(error => res.status(500).json({ error: error.message }));
-};*/
-
 
 // GET ID - READ
 exports.getOneBook = (req, res) => {
@@ -61,44 +45,6 @@ exports.getOneBook = (req, res) => {
 };
 
 // PUT - UPDATE
-/*exports.modifyBook = async (req, res) => {
-  try {
-    const existingBook = await Book.findOne({ _id: req.params.id });
-    if (!existingBook) {
-      return res.status(404).json({ error: "Book not found" });
-    }
-    if (existingBook.userId != req.auth.userId) {
-      return res.status(403).json({ error: "Unauthorized request" });
-    }
-
-    let updatedImageUrl = req.imageUrl || existingBook.imageUrl;
-    if (req.file && existingBook.imageUrl !== updatedImageUrl) {
-      const oldFilename = existingBook.imageUrl.split('/images/')[1];
-      try {
-        await fs.unlink(`images/${oldFilename}`);
-      } catch (err) {
-        console.error("Error deleting old image:", err);
-      }
-    }
-
-    const updatedBook = {
-      userId: req.auth.userId,
-      title: escape(req.bookData.title) || existingBook.title,
-      author: escape(req.bookData.author) || existingBook.author,
-      imageUrl: updatedImageUrl,
-      year: req.bookData.year ? parseInt(req.bookData.year, 10) : existingBook.year,
-      genre: escape(req.bookData.genre) || existingBook.genre,
-      ratings: existingBook.ratings,
-      averageRating: existingBook.averageRating
-    };
-
-    await Book.updateOne({ _id: req.params.id }, updatedBook);
-    res.status(200).json({ message: 'Book updated !' });
-  } catch (error) {
-    console.error('Error updating book:', error);
-    res.status(500).json({ error: error.message });
-  }
-};*/
 exports.modifyBook = (req, res, next) => {
   const bookObject = req.file ? {
     ...JSON.parse(req.body.book),
@@ -194,7 +140,7 @@ exports.addRating = (req, res) => {
             }
             book.ratings.push({ userId, grade });
             const sum = book.ratings.reduce((acc, curr) => acc + curr.grade, 0);
-            book.averageRating = Number((sum / book.ratings.length).toFixed(3));
+            book.averageRating = Number((sum / book.ratings.length).toFixed(1));
             return book.save();
         })
         .then(updatedBook => res.status(200).json(updatedBook))
