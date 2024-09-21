@@ -18,6 +18,8 @@ const morgan = require('morgan');
 app.use(limitTryByIP);
 app.use(morgan('dev'));
 app.use(express.json());
+//app.use(express.json({ type: 'application/json; charset=utf-8' }));
+//app.use(express.urlencoded({ extended: true, type: 'application/x-www-form-urlencoded; charset=utf-8' }));
 app.use(mongoSanitize());
 app.disable('x-powered-by');
 
@@ -33,6 +35,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, Authorization');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
   res.setHeader('content-type', 'text/html; charset=utf-8');
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   next();
 });
 

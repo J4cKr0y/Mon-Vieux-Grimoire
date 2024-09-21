@@ -89,7 +89,6 @@ describe('Authentication', () => {
     authToken = token;
 	userId = responseBody.userId;
   });
-});
 
     it('should reject book creation with invalid data', async () => {
       const invalidBookData = {
@@ -104,7 +103,8 @@ describe('Authentication', () => {
       expect(response.status).toBe(400);
 	  expect(JSON.parse(response.text)).toHaveProperty('error');
     }); 
-	
+});	
+
 let testBookId;
 describe('Book Controller', () => {
   it('should create a new book', (done) => {
@@ -181,7 +181,7 @@ console.log(testBookId);
         .field('book', JSON.stringify(updatedBookData))
         .attach('image', path.join(__dirname, 'updatedTestImage.jpg'));
       expect(response.status).toBe(200);
-	  expect(JSON.parse(response.text)).toHaveProperty('message', 'Book updated !');
+	  expect(JSON.parse(response.text)).toHaveProperty('message', 'Book updated!');
     });
 
     it('should reject update with invalid data', async () => {

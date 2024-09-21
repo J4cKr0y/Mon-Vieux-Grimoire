@@ -6,7 +6,7 @@ const path = require('path');
 const { performance, PerformanceObserver } = require('perf_hooks');
 const processImageMid = require('../middleware/processImageMid');
 const { validateBookData } = require('../middleware/validateBookData');
-const escape = require('escape-html');
+const he = require('he');
 
 // POST - CREATE
 exports.createBook = (req, res) => {
@@ -21,9 +21,9 @@ exports.createBook = (req, res) => {
   const book = new Book({
     ...bookObject,
     userId: req.auth.userId,
-    title: escape(bookObject.title),
-    author: escape(bookObject.author),
-    genre: escape(bookObject.genre),
+    title: he.encode(bookObject.title),
+    author: he.encode(bookObject.author),
+    genre: he.encode(bookObject.genre),
     imageUrl: req.imageUrl 
   });
 
@@ -39,7 +39,12 @@ exports.getOneBook = (req, res) => {
       if (!book) {
         return res.status(404).json({error});
       }
-      res.status(200).json(book);
+      res.status(200).json({
+        ...book._doc,
+        title: he.decode(book.title), 
+        author: he.decode(book.author),
+        genre: he.decode(book.genre)
+      });
     })
     .catch(error => res.status(500).json({ error }));
 };
@@ -51,14 +56,18 @@ exports.modifyBook = (req, res, next) => {
     imageUrl: req.imageUrl 
   } : { ...req.body };
 
+  bookObject.title = he.encode(bookObject.title);
+  bookObject.author = he.encode(bookObject.author);
+  bookObject.genre = he.encode(bookObject.genre);
+
   delete bookObject._userId;
   Book.findOne({_id: req.params.id})
     .then((book) => {
       if (book.userId != req.auth.userId) {
-        res.status(401).json({ message : 'Not authorized'});
+        res.status(401).json({ message: 'Not authorized' });
       } else {
-        Book.updateOne({ _id: req.params.id}, { ...bookObject, _id: req.params.id})
-          .then(() => res.status(200).json({message : 'Book updated !'}))
+        Book.updateOne({ _id: req.params.id }, { ...bookObject, _id: req.params.id })
+          .then(() => res.status(200).json({ message: 'Book updated!' }))
           .catch(error => res.status(401).json({ error }));
       }
     })
@@ -109,7 +118,15 @@ exports.getBestRatedBooks = (req, res) => {
     Book.find()
         .sort({ averageRating: -1 }) 
         .limit(3) 
-        .then(books => res.status(200).json(books))
+        .then(books => {
+            const decodedBooks = books.map(book => ({
+                ...book._doc,
+                title: he.decode(book.title),
+                author: he.decode(book.author),
+                genre: he.decode(book.genre)
+            }));
+            res.status(200).json(decodedBooks);
+        })
         .catch(error => res.status(500).json({ error }));
 };
 
@@ -153,6 +170,14 @@ exports.addRating = (req, res) => {
 // GET ALL
 exports.getAllBooks = (req, res) => {
   Book.find()
-    .then(books => res.status(200).json(books))
+    .then(books => {
+        const decodedBooks = books.map(book => ({
+            ...book._doc,
+            title: he.decode(book.title),
+            author: he.decode(book.author),
+            genre: he.decode(book.genre)
+        }));
+        res.status(200).json(decodedBooks);
+    })
     .catch(error => res.status(400).json({ error }));
 };

@@ -2,7 +2,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const escape = require('escape-html');
+const he = require('he');
 
 const validatePassword = (password) => {
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -16,9 +16,9 @@ const validateEmail = (email) => {
 
 exports.signup = async (req, res, next) => {
   try {
-    const email = escape(req.body.email);
+    const email = he.encode(req.body.email);
     const password = req.body.password; 
-//console.log('Validating email:', email);
+console.log('Validating email:', email);
     if (!validateEmail(email)) {
       return res.status(400).json({ error: 'Invalid email' });
     }
@@ -39,7 +39,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const email = escape(req.body.email);
+    const email = he.encode(req.body.email);
     const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
