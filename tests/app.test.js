@@ -1,4 +1,5 @@
 //app.test.js
+const { MongoMemoryServer } = require('mongodb-memory-server');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
@@ -13,17 +14,16 @@ const Book = require('../models/book');
 
 jest.setTimeout(30000);
 
+let mongoServer;
+
 beforeAll(async () => {
-  const mongodbURI = `mongodb+srv://${process.env.DATABASE_NAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}`;
-  try {
-    await mongoose.connect(mongodbURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-console.log('Connected to test database');
-  } catch (error) {
-    console.error('Error in test setup:', error);
-  }
+  await mongoose.disconnect();
+  mongoServer = await MongoMemoryServer.create();
+  const uri = mongoServer.getUri();
+  await mongoose.connect(uri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 });
 
 describe('User Controller', () => {
@@ -52,7 +52,6 @@ describe('User Controller', () => {
       expect(response.status).toBe(400);
 	  expect(JSON.parse(response.text)).toHaveProperty('error', 'Invalid password');
     });
-  }); 
 	  
     it('should register a new user successfully', async () => {
   const userData = { 
@@ -66,11 +65,12 @@ describe('User Controller', () => {
   expect(JSON.parse(response.text)).toHaveProperty('message', 'User created!');
 });
 });
+});
 
 let authToken;
 let userId;
 describe('Authentication', () => {
-  it('should login and return a token in response body', async () => {
+  it('should login and return a token in response', async () => {
     const uniqueEmail = `testuser_${Date.now()}@example.com`; 
     await request(app)
       .post('/api/auth/signup')
@@ -89,8 +89,12 @@ describe('Authentication', () => {
     authToken = token;
 	userId = responseBody.userId;
   });
+});	
 
-    it('should reject book creation with invalid data', async () => {
+let testBookId;
+describe('Book Controller', () => {
+	
+	   it('should reject book creation with invalid data', async () => {
       const invalidBookData = {
         // Missing required fields
         author: 'Test Author',
@@ -103,10 +107,7 @@ describe('Authentication', () => {
       expect(response.status).toBe(400);
 	  expect(JSON.parse(response.text)).toHaveProperty('error');
     }); 
-});	
-
-let testBookId;
-describe('Book Controller', () => {
+	
   it('should create a new book', (done) => {
     const bookData = {
       userId: userId,
@@ -263,8 +264,7 @@ console.log(testBookId);
   });
 
 afterAll(async () => {
-  await User.deleteMany({});
-  await Book.deleteMany({});
-  await mongoose.connection.close();
-  console.log('Test database connection closed');
+await mongoose.disconnect();
+  await mongoServer.stop();
 });
+
