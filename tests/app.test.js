@@ -20,10 +20,7 @@ beforeAll(async () => {
   await mongoose.disconnect();
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
-  await mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(uri, {});
 });
 
 describe('User Controller', () => {
@@ -69,7 +66,7 @@ describe('User Controller', () => {
 
 let authToken;
 let userId;
-describe('Authentication', () => {
+describe('POST /api/auth/login', () => {
   it('should login and return a token in response', async () => {
     const uniqueEmail = `testuser_${Date.now()}@example.com`; 
     await request(app)
@@ -92,7 +89,7 @@ describe('Authentication', () => {
 });	
 
 let testBookId;
-describe('Book Controller', () => {
+describe('POST /api/books', () => {
 	
 	   it('should reject book creation with invalid data', async () => {
       const invalidBookData = {
@@ -118,9 +115,9 @@ describe('Book Controller', () => {
       ratings: [{ userId: userId, grade: 0 }],
       averageRating: 0
     };
-console.log('bookData: ', bookData);  
+/*console.log('bookData: ', bookData);  
 console.log('authToken in Book Controller test: ', authToken);  
-console.log('userId in Book Controller test: ', userId);  
+console.log('userId in Book Controller test: ', userId);  */
 const imagePath = path.join(__dirname, 'testImage.jpg');
     if (!fs.existsSync(imagePath)) {
       return done(new Error('testImage.jpg does not exist'));
@@ -131,8 +128,8 @@ const imagePath = path.join(__dirname, 'testImage.jpg');
       .field('book', JSON.stringify(bookData))
       .attach('image', path.join(__dirname, 'testImage.jpg'))
       .then(response => {
-        console.log('Response status:', response.status);
-        console.log('Response text:', response.text);
+/*console.log('Response status:', response.status);
+console.log('Response text:', response.text);*/
         expect(response.status).toBe(201);
         expect(JSON.parse(response.text)).toHaveProperty('message', 'Book saved !');
         // Save the book ID for later tests
@@ -140,7 +137,7 @@ const imagePath = path.join(__dirname, 'testImage.jpg');
       })
       .then(createdBook => {
         testBookId = createdBook._id;
-console.log(testBookId);
+//console.log(testBookId);
         done();
       })
       .catch(err => {

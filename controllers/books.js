@@ -82,13 +82,13 @@ exports.deleteBook = async (req, res) => {
   try {
     const book = await Book.findOne({ _id: req.params.id });
     if (!book) {
-      const duration = performance.now() - start;
-      console.log(`deleteBook (book not found) took ${duration}ms`);
+/*const duration = performance.now() - start;
+console.log(`deleteBook (book not found) took ${duration}ms`);*/
       return res.status(404).json({ error: 'Book not found' });
     }
     if (book.userId != req.auth.userId) {
-      const duration = performance.now() - start;
-      console.log(`deleteBook (unauthorized) took ${duration}ms`);
+/*const duration = performance.now() - start;
+console.log(`deleteBook (unauthorized) took ${duration}ms`);*/
       return res.status(401).json({ message: 'Not authorized' });
     }
 
@@ -96,19 +96,19 @@ exports.deleteBook = async (req, res) => {
       const filename = book.imageUrl.split('/images/')[1];
       try {
         await fs.unlink(path.join('images', filename));
-        console.log(`Image ${filename} deleted successfully`);
+//console.log(`Image ${filename} deleted successfully`);
       } catch (unlinkError) {
         console.error("Error deleting image:", unlinkError);
       }
     }
 
     await Book.deleteOne({ _id: req.params.id });
-    const duration = performance.now() - start;
-    console.log(`deleteBook (success) took ${duration}ms`);
+/*const duration = performance.now() - start;
+console.log(`deleteBook (success) took ${duration}ms`);*/
     res.status(200).json({ message: 'Book deleted!' });
   } catch (error) {
-    const duration = performance.now() - start;
-    console.error(`deleteBook (error) took ${duration}ms:`, error);
+/*const duration = performance.now() - start;
+console.error(`deleteBook (error) took ${duration}ms:`, error);*/
     res.status(500).json({ error: error.message });
   }
 };

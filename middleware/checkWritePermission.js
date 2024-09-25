@@ -4,7 +4,7 @@ const path = require('path');
 
 const checkWritePermission = (directory) => {
     return (req, res, next) => {
-		console.log(`checkWritePermission in ${directory}`);
+//console.log(`checkWritePermission in ${directory}`);
         const testFile = path.join(directory, `test-write-permission-${Date.now()}.txt`);
         
         fs.writeFile(testFile, 'Writing test', (writeErr) => {
@@ -19,7 +19,7 @@ const checkWritePermission = (directory) => {
                     
                 }
                 
-                console.log(`Write permissions check successful in ${directory}`);
+                //console.log(`Write permissions check successful in ${directory}`);
                 next(); 
             });
         });

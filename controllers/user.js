@@ -18,7 +18,7 @@ exports.signup = async (req, res, next) => {
   try {
     const email = he.encode(req.body.email);
     const password = req.body.password; 
-console.log('Validating email:', email);
+//console.log('Validating email:', email);
     if (!validateEmail(email)) {
       return res.status(400).json({ error: 'Invalid email' });
     }
