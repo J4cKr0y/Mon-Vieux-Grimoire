@@ -3,7 +3,6 @@ const express = require('express');
 const app = express();
 const mongoose = require('mongoose');
 const dotEnv=require("dotenv").config();
-const User = require('./models/user'); 
 const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
@@ -21,7 +20,6 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(mongoSanitize());
 app.disable('x-powered-by');
-
 
 const mongodbURI = `mongodb+srv://${process.env.DATABASE_NAME}:${process.env.DATABASE_PASSWORD}@${process.env.DATABASE_URL}`;
 mongoose.connect(mongodbURI, {})
