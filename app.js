@@ -6,7 +6,6 @@ const dotEnv=require("dotenv").config();
 const booksRoutes = require('./routes/books');
 const userRoutes = require('./routes/user');
 const authRoutes = require('./routes/auth');
-const auth = require('./middleware/auth');
 const limitTryByIP = require('./middleware/limitTryByIP');
 const path = require('path');
 const checkWritePermission = require('./middleware/checkWritePermission');

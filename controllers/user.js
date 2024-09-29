@@ -2,7 +2,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const he = require('he');
 
 const validatePassword = (password) => {
   const passwordRegex = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -16,7 +15,7 @@ const validateEmail = (email) => {
 
 exports.signup = async (req, res, next) => {
   try {
-    const email = he.encode(req.body.email);
+    const email = req.body.email.toLowerCase().trim();
     const password = req.body.password; 
 //console.log('Validating email:', email);
     if (!validateEmail(email)) {
@@ -39,7 +38,7 @@ exports.signup = async (req, res, next) => {
 
 exports.login = async (req, res, next) => {
   try {
-    const email = he.encode(req.body.email);
+    const email = req.body.email.toLowerCase().trim();
     const user = await User.findOne({ email: email });
     if (!user) {
       return res.status(401).json({ error: 'User not found' });
@@ -63,10 +62,4 @@ exports.login = async (req, res, next) => {
     console.error('Error in login:', error);
     res.status(500).json({ error: error.message });
   }
-};
-
-// Test function to verify email validation
-exports.testEmailValidation = (email) => {
-  console.log(`Testing email: ${email}`);
-  console.log(`Is valid: ${validateEmail(email)}`);
 };
