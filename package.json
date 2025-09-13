@@ -32,5 +32,9 @@
   },
   "jest": {
     "testEnvironment": "node"
+  }, 
+  "scripts": {
+  "start": "node server.js",
+  "test": "jest"
   }
 }
